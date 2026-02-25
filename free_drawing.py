@@ -83,6 +83,12 @@ pointer = Entity( parent=camera.ui,
                  color=color.red, 
                  enabled=False 
                  ) 
+Developer_text = Text (
+    "Created by PrafoTekno",
+    position=Vec2(0.45, 0.45),
+    scale=1,
+    color=rgb(1,1,1)
+)
 
 def smooth(old, new, factor=0.18): 
     return old + (new - old) * factor 
@@ -210,6 +216,7 @@ def input(key):
 app.run()
 cv2.destroyAllWindows()
 cap.release()
+
 
 
     
