@@ -76,6 +76,8 @@ brush_size = 0.02
 brush_color = color.white
 last_draw_pos = None
 
+drawn_platforms = []
+
 # ------------------------- # Pointer cursor + highlight # -------------------------
 pointer = Entity( parent=camera.ui, 
                  model='sphere', 
@@ -83,12 +85,6 @@ pointer = Entity( parent=camera.ui,
                  color=color.red, 
                  enabled=False 
                  ) 
-Developer_text = Text (
-    "Created by PrafoTekno",
-    position=Vec2(0.45, 0.45),
-    scale=1,
-    color=rgb(1,1,1)
-)
 
 def smooth(old, new, factor=0.18): 
     return old + (new - old) * factor 
@@ -99,19 +95,23 @@ def cam_to_ui(px, py, img_w, img_h):
     ny = py/img_h 
     return Vec3( (nx-0.5)*0.9, (0.5-ny)*0.9, 0 )
 
+Developer_text = Text (
+    "Created by PrafoTekno",
+    position=Vec2(0.45, 0.45),
+    scale=1,
+    color=rgb(1,1,1)
+)
+
+command_text = Text (
+    "index finger for drawing, index and mid fing to delete",
+    position=Vec2(0.18, 0.40),
+    scale=1,
+    color=rgb(1,1,1)
+)
+
 def update():
 
     fps_text.text = f"FPS: {int(1 / time.dt)}"
-
-    global selected_box, is_grabbing, last_right_count, count_fing_up
-    global rotation_speed_x, rotation_speed_y, reference_x, reference_y, hand_active
-    global ref_pan_x, ref_pan_y, hand_pan_active, previous_mode, position_speed_x, position_speed_z
-    global zoom_speed, max_zoom, min_zoom, zoom_amount, pinch_reference, zoom_active
-    global thumb_up, index_up, middle_up, ring_up, pinky_up
-    global highlight_box, pan_velocity, target_move, forward_dir
-    global c1, c2, cR
-
-    hover_button = None
 
     success, img = cap.read()
     if not success:
@@ -151,16 +151,16 @@ def update():
         ring_up   = right["lmList"][16][1] < right["lmList"][14][1]
         pinky_up  = right["lmList"][20][1] < right["lmList"][18][1]
 
-        if not thumb_up and not index_up:
-            current_mode_R = "spawn_box"
-        elif not middle_up and not ring_up and not pinky_up:
-            current_mode_R = "selected_box"
+        if not thumb_up and middle_up and index_up and not ring_up and not pinky_up:
+            current_mode_R = "delete"
+        elif not middle_up and not ring_up and not pinky_up and not thumb_up and index_up:
+            current_mode_R = "drawing"
         elif not middle_up and not ring_up and not pinky_up and thumb_up and not index_up:
             current_mode_R = "switch_obj"
         else:
             current_mode_R = "none"
 
-    if current_mode_R == "selected_box":
+    if current_mode_R == "drawing":
 
         lm = right["lmList"]
         index = lm[8]
@@ -181,13 +181,14 @@ def update():
 
             for i in range(steps):
                 pos = lerp(last_draw_pos, ui_pt, i / steps)
-                Entity(
+                plat = Entity(
                     parent=camera.ui,
                     model='quad',
                     scale=brush_size,
                     color=brush_color,
                     position=pos
                 )
+                drawn_platforms.append (plat)
 
         last_draw_pos = ui_pt
 
@@ -195,6 +196,11 @@ def update():
         pointer.enabled = False
         last_draw_pos = None
     
+    if current_mode_R == "delete":
+        for p in drawn_platforms:
+            destroy(p)
+        drawn_platforms.clear()
+
     # ============================================================
     # ================= Hand Visualization Update ================
     # ============================================================
@@ -216,7 +222,6 @@ def input(key):
 app.run()
 cv2.destroyAllWindows()
 cap.release()
-
 
 
     
